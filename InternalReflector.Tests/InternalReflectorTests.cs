@@ -377,5 +377,30 @@ namespace InternalReflector.Tests {
 				Assert.Equal(88, updatedValue);
 			}
 		}
+
+		public class StaticInstanceResolutionTests {
+			private class MixedMethodType {
+				private static string Target(object value) {
+					return "static";
+				}
+
+				private string Target(string value) {
+					return "instance";
+				}
+			}
+
+			[Fact]
+			public void StaticCallUsesStaticMethodScope() {
+				var result = InternalReflector<MixedMethodType>.Call("Target", new object[] { null! });
+				Assert.Equal("static", (string)result!);
+			}
+
+			[Fact]
+			public void InstanceCallUsesInstanceMethodScope() {
+				var instance = new MixedMethodType();
+				var result = InternalReflector<MixedMethodType>.Call(instance, "Target", new object[] { null! });
+				Assert.Equal("instance", (string)result!);
+			}
+		}
 	}
 }

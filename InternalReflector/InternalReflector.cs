@@ -23,7 +23,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(methodName))
 				throw new ArgumentException("Method name cannot be null or empty", nameof(methodName));
 
-			var method = FindMethod(methodName, parameters);
+			var method = FindStaticMethod(methodName, parameters);
 			if (method == null)
 				throw new InvalidOperationException($"Method '{methodName}' not found on type '{TargetType.Name}'");
 
@@ -47,7 +47,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(methodName))
 				throw new ArgumentException("Method name cannot be null or empty", nameof(methodName));
 
-			var method = FindMethod(methodName, parameters);
+			var method = FindInstanceMethod(methodName, parameters);
 			if (method == null)
 				throw new InvalidOperationException($"Method '{methodName}' not found on type '{TargetType.Name}'");
 
@@ -91,7 +91,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(fieldName))
 				throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
 
-			var field = FindField(fieldName);
+			var field = FindStaticField(fieldName);
 			if (field == null)
 				throw new InvalidOperationException($"Field '{fieldName}' not found on type '{TargetType.Name}'");
 
@@ -116,7 +116,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(fieldName))
 				throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
 
-			var field = FindField(fieldName);
+			var field = FindInstanceField(fieldName);
 			if (field == null)
 				throw new InvalidOperationException($"Field '{fieldName}' not found on type '{TargetType.Name}'");
 
@@ -155,7 +155,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(fieldName))
 				throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
 
-			var field = FindField(fieldName);
+			var field = FindStaticField(fieldName);
 			if (field == null)
 				throw new InvalidOperationException($"Field '{fieldName}' not found on type '{TargetType.Name}'");
 
@@ -175,7 +175,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(fieldName))
 				throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
 
-			var field = FindField(fieldName);
+			var field = FindInstanceField(fieldName);
 			if (field == null)
 				throw new InvalidOperationException($"Field '{fieldName}' not found on type '{TargetType.Name}'");
 
@@ -213,7 +213,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(propertyName))
 				throw new ArgumentException("Property name cannot be null or empty", nameof(propertyName));
 
-			var property = FindProperty(propertyName);
+			var property = FindStaticProperty(propertyName);
 			if (property == null)
 				throw new InvalidOperationException($"Property '{propertyName}' not found on type '{TargetType.Name}'");
 
@@ -238,7 +238,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(propertyName))
 				throw new ArgumentException("Property name cannot be null or empty", nameof(propertyName));
 
-			var property = FindProperty(propertyName);
+			var property = FindInstanceProperty(propertyName);
 			if (property == null)
 				throw new InvalidOperationException($"Property '{propertyName}' not found on type '{TargetType.Name}'");
 
@@ -277,7 +277,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(propertyName))
 				throw new ArgumentException("Property name cannot be null or empty", nameof(propertyName));
 
-			var property = FindProperty(propertyName);
+			var property = FindStaticProperty(propertyName);
 			if (property == null)
 				throw new InvalidOperationException($"Property '{propertyName}' not found on type '{TargetType.Name}'");
 
@@ -297,7 +297,7 @@ namespace InternalReflector {
 			if (string.IsNullOrEmpty(propertyName))
 				throw new ArgumentException("Property name cannot be null or empty", nameof(propertyName));
 
-			var property = FindProperty(propertyName);
+			var property = FindInstanceProperty(propertyName);
 			if (property == null)
 				throw new InvalidOperationException($"Property '{propertyName}' not found on type '{TargetType.Name}'");
 
@@ -321,26 +321,48 @@ namespace InternalReflector {
 			SetProperty(typedInstance, propertyName, value);
 		}
 
-#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		private static MethodInfo FindMethod(string methodName, object[] parameters) {
-#else
-		private static MethodInfo? FindMethod(string methodName, object[] parameters) {
-#endif
+		private static Type[] GetParameterTypes(object[] parameters) {
 			var parameterTypes = new Type[parameters.Length];
 			for (int i = 0; i < parameters.Length; i++) {
 				parameterTypes[i] = parameters[i]?.GetType() ?? typeof(object);
 			}
+			return parameterTypes;
+		}
 
-			// First try to find with exact parameter types
-			var method = TargetType.GetMethod(methodName, 
-				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance,
+		private static MethodInfo[] GetMethods(BindingFlags scopeFlags) {
+			return TargetType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | scopeFlags);
+		}
+
+#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
+		private static MethodInfo FindStaticMethod(string methodName, object[] parameters) {
+#else
+		private static MethodInfo? FindStaticMethod(string methodName, object[] parameters) {
+#endif
+			return FindMethodInScope(methodName, parameters, BindingFlags.Static);
+		}
+
+#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
+		private static MethodInfo FindInstanceMethod(string methodName, object[] parameters) {
+#else
+		private static MethodInfo? FindInstanceMethod(string methodName, object[] parameters) {
+#endif
+			return FindMethodInScope(methodName, parameters, BindingFlags.Instance);
+		}
+
+#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
+		private static MethodInfo FindMethodInScope(string methodName, object[] parameters, BindingFlags scopeFlags) {
+#else
+		private static MethodInfo? FindMethodInScope(string methodName, object[] parameters, BindingFlags scopeFlags) {
+#endif
+			var parameterTypes = GetParameterTypes(parameters);
+			var method = TargetType.GetMethod(methodName,
+				BindingFlags.NonPublic | BindingFlags.Public | scopeFlags,
 				null, parameterTypes, null);
 
 			if (method != null)
 				return method;
 
-			// If not found, try to find by name and let reflection handle parameter conversion
-			var methods = TargetType.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+			var methods = GetMethods(scopeFlags);
 			foreach (var m in methods) {
 				if (m.Name == methodName && m.GetParameters().Length == parameters.Length) {
 					return m;
@@ -351,21 +373,39 @@ namespace InternalReflector {
 		}
 
 #if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		private static FieldInfo FindField(string fieldName) {
+		private static FieldInfo FindStaticField(string fieldName) {
 #else
-		private static FieldInfo? FindField(string fieldName) {
+		private static FieldInfo? FindStaticField(string fieldName) {
 #endif
-			return TargetType.GetField(fieldName, 
-				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+			return TargetType.GetField(fieldName,
+				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
 		}
 
 #if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		private static PropertyInfo FindProperty(string propertyName) {
+		private static FieldInfo FindInstanceField(string fieldName) {
 #else
-		private static PropertyInfo? FindProperty(string propertyName) {
+		private static FieldInfo? FindInstanceField(string fieldName) {
 #endif
-			return TargetType.GetProperty(propertyName, 
-				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+			return TargetType.GetField(fieldName,
+				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+		}
+
+#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
+		private static PropertyInfo FindStaticProperty(string propertyName) {
+#else
+		private static PropertyInfo? FindStaticProperty(string propertyName) {
+#endif
+			return TargetType.GetProperty(propertyName,
+				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+		}
+
+#if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
+		private static PropertyInfo FindInstanceProperty(string propertyName) {
+#else
+		private static PropertyInfo? FindInstanceProperty(string propertyName) {
+#endif
+			return TargetType.GetProperty(propertyName,
+				BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 		}
 	}
 }
