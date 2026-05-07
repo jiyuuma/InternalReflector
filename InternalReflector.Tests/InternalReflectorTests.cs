@@ -328,5 +328,54 @@ namespace InternalReflector.Tests {
 				Assert.Equal(0, stream.Position);
 			}
 		}
+
+		public class InstanceTypingCompatibilityTests {
+			private class BaseType {
+			}
+
+			private class DerivedType : BaseType {
+#pragma warning disable 0414
+				private int _hiddenField = 10;
+#pragma warning restore 0414
+				private int HiddenProperty { get; set; } = 20;
+
+				private int HiddenMethod() {
+					return 42;
+				}
+			}
+
+			[Fact]
+			public void CallAcceptsBaseTypedInstanceViaObjectOverload() {
+				BaseType instance = new DerivedType();
+
+				var result = InternalReflector<DerivedType>.Call(instance, "HiddenMethod");
+
+				Assert.Equal(42, (int)result!);
+			}
+
+			[Fact]
+			public void FieldAccessAcceptsBaseTypedInstanceViaObjectOverload() {
+				BaseType instance = new DerivedType();
+
+				var fieldValue = InternalReflector<DerivedType>.GetField<int>(instance, "_hiddenField");
+				Assert.Equal(10, fieldValue);
+
+				InternalReflector<DerivedType>.SetField(instance, "_hiddenField", 99);
+				var updatedValue = InternalReflector<DerivedType>.GetField<int>(instance, "_hiddenField");
+				Assert.Equal(99, updatedValue);
+			}
+
+			[Fact]
+			public void PropertyAccessAcceptsBaseTypedInstanceViaObjectOverload() {
+				BaseType instance = new DerivedType();
+
+				var propertyValue = InternalReflector<DerivedType>.GetProperty<int>(instance, "HiddenProperty");
+				Assert.Equal(20, propertyValue);
+
+				InternalReflector<DerivedType>.SetProperty(instance, "HiddenProperty", 88);
+				var updatedValue = InternalReflector<DerivedType>.GetProperty<int>(instance, "HiddenProperty");
+				Assert.Equal(88, updatedValue);
+			}
+		}
 	}
 }
