@@ -5,9 +5,9 @@ namespace InternalReflector {
 	/// <summary>
 	/// A wrapper around .NET Reflection that provides access to internal or private fields, properties, and methods in classes.
 	/// </summary>
-	/// <typeparam name="T">The type to reflect upon</typeparam>
-	public static class InternalReflector<T> {
-		private static readonly Type TargetType = typeof(T);
+	/// <typeparam name="TType">The type to reflect upon</typeparam>
+	public static class InternalReflector<TType> {
+		private static readonly Type TargetType = typeof(TType);
 
 		/// <summary>
 		/// Calls a private or internal method on the target type.
@@ -38,9 +38,9 @@ namespace InternalReflector {
 		/// <param name="parameters">The parameters to pass to the method</param>
 		/// <returns>The return value of the method, or null if the method returns void</returns>
 #if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		public static object Call(T instance, string methodName, params object[] parameters) {
+		public static object Call(TType instance, string methodName, params object[] parameters) {
 #else
-		public static object? Call(T instance, string methodName, params object[] parameters) {
+		public static object? Call(TType instance, string methodName, params object[] parameters) {
 #endif
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
@@ -56,7 +56,7 @@ namespace InternalReflector {
 
 		/// <summary>
 		/// Calls a private or internal instance method on the specified instance object.
-		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="T"/>.
+		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="TType"/>.
 		/// </summary>
 		/// <param name="instance">The instance object to call the method on</param>
 		/// <param name="methodName">The name of the method to call</param>
@@ -71,7 +71,7 @@ namespace InternalReflector {
 				throw new ArgumentNullException(nameof(instance));
 			if (string.IsNullOrEmpty(methodName))
 				throw new ArgumentException("Method name cannot be null or empty", nameof(methodName));
-			if (!(instance is T typedInstance))
+			if (!(instance is TType typedInstance))
 				throw new ArgumentException($"Instance must be assignable to type '{TargetType.FullName}'", nameof(instance));
 
 			return Call(typedInstance, methodName, parameters);
@@ -107,9 +107,9 @@ namespace InternalReflector {
 		/// <param name="fieldName">The name of the field</param>
 		/// <returns>The value of the field</returns>
 #if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		public static TField GetField<TField>(T instance, string fieldName) {
+		public static TField GetField<TField>(TType instance, string fieldName) {
 #else
-		public static TField? GetField<TField>(T instance, string fieldName) {
+		public static TField? GetField<TField>(TType instance, string fieldName) {
 #endif
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
@@ -126,7 +126,7 @@ namespace InternalReflector {
 
 		/// <summary>
 		/// Gets the value of a private or internal instance field from the specified instance object.
-		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="T"/>.
+		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="TType"/>.
 		/// </summary>
 		/// <typeparam name="TField">The type of the field</typeparam>
 		/// <param name="instance">The instance object to get the field from</param>
@@ -139,7 +139,7 @@ namespace InternalReflector {
 #endif
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			if (!(instance is T typedInstance))
+			if (!(instance is TType typedInstance))
 				throw new ArgumentException($"Instance must be assignable to type '{TargetType.FullName}'", nameof(instance));
 
 			return GetField<TField>(typedInstance, fieldName);
@@ -169,7 +169,7 @@ namespace InternalReflector {
 		/// <param name="instance">The instance to set the field on</param>
 		/// <param name="fieldName">The name of the field</param>
 		/// <param name="value">The value to set</param>
-		public static void SetField<TField>(T instance, string fieldName, TField value) {
+		public static void SetField<TField>(TType instance, string fieldName, TField value) {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
 			if (string.IsNullOrEmpty(fieldName))
@@ -184,7 +184,7 @@ namespace InternalReflector {
 
 		/// <summary>
 		/// Sets the value of a private or internal instance field on the specified instance object.
-		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="T"/>.
+		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="TType"/>.
 		/// </summary>
 		/// <typeparam name="TField">The type of the field</typeparam>
 		/// <param name="instance">The instance object to set the field on</param>
@@ -193,7 +193,7 @@ namespace InternalReflector {
 		public static void SetField<TField>(object instance, string fieldName, TField value) {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			if (!(instance is T typedInstance))
+			if (!(instance is TType typedInstance))
 				throw new ArgumentException($"Instance must be assignable to type '{TargetType.FullName}'", nameof(instance));
 
 			SetField(typedInstance, fieldName, value);
@@ -229,9 +229,9 @@ namespace InternalReflector {
 		/// <param name="propertyName">The name of the property</param>
 		/// <returns>The value of the property</returns>
 #if NET20 || NET35 || NET40 || NET45 || NET451 || NET452 || NET46 || NET461 || NET462 || NET47 || NET471 || NET472 || NET48 || NET481
-		public static TProperty GetProperty<TProperty>(T instance, string propertyName) {
+		public static TProperty GetProperty<TProperty>(TType instance, string propertyName) {
 #else
-		public static TProperty? GetProperty<TProperty>(T instance, string propertyName) {
+		public static TProperty? GetProperty<TProperty>(TType instance, string propertyName) {
 #endif
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
@@ -248,7 +248,7 @@ namespace InternalReflector {
 
 		/// <summary>
 		/// Gets the value of a private or internal instance property from the specified instance object.
-		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="T"/>.
+		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="TType"/>.
 		/// </summary>
 		/// <typeparam name="TProperty">The type of the property</typeparam>
 		/// <param name="instance">The instance object to get the property from</param>
@@ -261,7 +261,7 @@ namespace InternalReflector {
 #endif
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			if (!(instance is T typedInstance))
+			if (!(instance is TType typedInstance))
 				throw new ArgumentException($"Instance must be assignable to type '{TargetType.FullName}'", nameof(instance));
 
 			return GetProperty<TProperty>(typedInstance, propertyName);
@@ -291,7 +291,7 @@ namespace InternalReflector {
 		/// <param name="instance">The instance to set the property on</param>
 		/// <param name="propertyName">The name of the property</param>
 		/// <param name="value">The value to set</param>
-		public static void SetProperty<TProperty>(T instance, string propertyName, TProperty value) {
+		public static void SetProperty<TProperty>(TType instance, string propertyName, TProperty value) {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
 			if (string.IsNullOrEmpty(propertyName))
@@ -306,7 +306,7 @@ namespace InternalReflector {
 
 		/// <summary>
 		/// Sets the value of a private or internal instance property on the specified instance object.
-		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="T"/>.
+		/// Useful when the compile-time type of the instance is not exactly <typeparamref name="TType"/>.
 		/// </summary>
 		/// <typeparam name="TProperty">The type of the property</typeparam>
 		/// <param name="instance">The instance object to set the property on</param>
@@ -315,7 +315,7 @@ namespace InternalReflector {
 		public static void SetProperty<TProperty>(object instance, string propertyName, TProperty value) {
 			if (instance == null)
 				throw new ArgumentNullException(nameof(instance));
-			if (!(instance is T typedInstance))
+			if (!(instance is TType typedInstance))
 				throw new ArgumentException($"Instance must be assignable to type '{TargetType.FullName}'", nameof(instance));
 
 			SetProperty(typedInstance, propertyName, value);
