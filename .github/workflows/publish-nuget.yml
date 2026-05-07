@@ -1,0 +1,37 @@
+name: Publish NuGet Package
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build-test-pack-publish:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore "InternalReflector.sln"
+
+      - name: Build
+        run: dotnet build "InternalReflector.sln" --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test "InternalReflector.Tests/InternalReflector.Tests.csproj" --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack "InternalReflector/InternalReflector.csproj" --configuration Release --no-build --output "./artifacts"
+
+      - name: Push to NuGet
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
