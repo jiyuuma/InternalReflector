@@ -59,6 +59,20 @@ InternalReflector<SomeClass>.SetProperty("SomeInternalProperty", 3.14f);
 InternalReflector<SomeClass>.SetProperty(instance, "SomeInternalProperty", 3.14f);
 ```
 
+### Reflecting Static Classes
+
+```csharp
+public static class SomeStaticClass
+{
+    private static int _counter = 1;
+    private static string HiddenLabel { get; set; } = "secret";
+}
+
+var reflector = InternalReflector.For(typeof(SomeStaticClass));
+var counter = reflector.GetField<int>("_counter");
+var label = reflector.GetProperty<string>("HiddenLabel");
+```
+
 ## Example
 
 ```csharp

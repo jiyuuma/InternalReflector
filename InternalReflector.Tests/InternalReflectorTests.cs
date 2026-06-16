@@ -402,5 +402,34 @@ namespace InternalReflector.Tests {
 				Assert.Equal("instance", (string)result!);
 			}
 		}
+
+		public class TypeReflectorStaticClassTests {
+			private static class StaticOnlyType {
+				private static int _count = 7;
+				private static string Label { get; set; } = "initial";
+
+				private static string Touch(int add) {
+					_count += add;
+					return Label + ":" + _count;
+				}
+			}
+
+			[Fact]
+			public void ForTypeCanAccessStaticClassMembers() {
+				var reflector = InternalReflector.For(typeof(StaticOnlyType));
+
+				var fieldBefore = reflector.GetField<int>("_count");
+				Assert.Equal(7, fieldBefore);
+
+				reflector.SetProperty("Label", "updated");
+				var methodResult = reflector.Call("Touch", 3);
+				Assert.Equal("updated:10", (string)methodResult!);
+
+				var fieldAfter = reflector.GetField<int>("_count");
+				var label = reflector.GetProperty<string>("Label");
+				Assert.Equal(10, fieldAfter);
+				Assert.Equal("updated", label);
+			}
+		}
 	}
 }
